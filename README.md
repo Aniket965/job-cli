@@ -1,6 +1,7 @@
 # job-cli [WIP]
 cli-tool for apply to jobs easily[WIP]
 > ![](ss.png)
+> ![](ss2.png)
 
 #### why
 > Finding jobs can be hard, cli-jobs scrapes websites and collect data about them from several websites to make applying to job more easier and faster

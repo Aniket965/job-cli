@@ -26,10 +26,22 @@ import requests
 from bs4 import BeautifulSoup
 from terminaltables import AsciiTable
 from tqdm import tqdm
+from selenium import webdriver as wd
+import selenium
 
 def get_soup(uri):
     req = requests.get(uri)
     return BeautifulSoup(req.content, 'html5lib')
+
+def get_browser():
+    chrome_options = wd.ChromeOptions()
+    chrome_options.add_argument('--headless')
+    chrome_options.add_argument('log-level=3')
+    browser = wd.Chrome('/Users/aniketsharma/chromedriver',options=chrome_options)
+    return browser
+
+browser = get_browser()
+
 def getDetails(uri):
     try:
         html = get_soup(uri)
@@ -55,8 +67,51 @@ def getDetails(uri):
         return None,None,None,None,None,None
     return id,company_name,company_website,job_role,link,salary
 
-
-
+def create_glass_door_url(company_name):
+    # FIXME: if there is only one listing in salaries the main page is returend
+    # handle that
+    name = company_name.replace(' ', '-')
+    base_url = "https://www.glassdoor.co.in" 
+    search_url = "https://www.glassdoor.co.in/Salaries/{}-salary-SRCH_KE0,{}.htm".format(name,len(name))
+    browser.get(search_url)
+    try:
+       html = BeautifulSoup(browser.page_source, 'html5lib')
+       links = html.find('div',attrs={'class','salaryEmployerList'}).findAll('a')
+       links = [x['href'] for x in links]
+       # TODO: choose from different links
+       return base_url + links[0]
+    except:
+        return ''
+  
+def getGlassDoorSalary(company_name):
+    table_data = [
+        ['Job Title','Salary']
+    ]
+    try:
+        url = create_glass_door_url(company_name)
+        if url == '':
+            return None
+        browser.get(url)
+        html = BeautifulSoup(browser.page_source, 'html5lib')
+        salary_rows_divs = html.findAll('div',attrs={'class':'salaryRow__SalaryRowStyle__row'})
+        for row in salary_rows_divs:
+            job_title = row.find('div',attrs={'class','salaryRow__JobInfoStyle__jobTitle'}).find('a').text
+            salary_rows = row.find('div', attrs={'class','salaryRow__SalaryRowStyle__amt'}).findAll('div')
+            if len(salary_rows) == 0:
+                salary_row= row.find('div', attrs={'class','salaryRow__SalaryRowStyle__amt'})
+                salary = salary_row.text
+            else:                
+                salary = None
+                for r in salary_rows:
+                    if '₹' in r.text:
+                        salary = r.text
+                        break
+            table_data.append([job_title, salary])
+        print(AsciiTable(table_data).table)
+    finally:
+        pass
+        # browser.close()
+    
 def find_jobs(page=2):
     URL = "https://www.freshercooker.in/category/courses/btech-be/btech-be-cse-it/page/{}".format(page)
     req = requests.get(URL)
@@ -74,6 +129,7 @@ def find_jobs(page=2):
         description = job_detail_div.find('div',attrs={'class':'td-excerpt'}).text
         id,company_name,company_website,job_role,link,salary= getDetails(link_job_page)
         # print(id,company_name,company_website,job_role,link)
+        # getGlassDoorSalary(company_name)
         table_data.append([company_name,job_role,company_website,salary])
         # break
         # print(job_title)
@@ -83,12 +139,15 @@ def find_jobs(page=2):
     print(AsciiTable(table_data).table)
 
 
+
+
 if __name__ == '__main__':
     # TODO: selectable jobs,keep track in json
-    # TODO: find salaries from glass door which are named as best in industry
     # TODO: open links directly by selecting company
     # TODO: add filters
     # TODO: make code modular to add more website
     # TODO: make applied jobs record
     
     find_jobs(page=3)
+    browser.close()
+    # print(create_glass_door_url('snap on inc'))
