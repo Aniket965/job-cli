@@ -26,21 +26,13 @@ import requests
 from bs4 import BeautifulSoup
 from terminaltables import AsciiTable
 from tqdm import tqdm
-from selenium import webdriver as wd
-import selenium
+from browser import Browser
 
 def get_soup(uri):
     req = requests.get(uri)
     return BeautifulSoup(req.content, 'html5lib')
 
-def get_browser():
-    chrome_options = wd.ChromeOptions()
-    chrome_options.add_argument('--headless')
-    chrome_options.add_argument('log-level=3')
-    browser = wd.Chrome('/Users/aniketsharma/chromedriver',options=chrome_options)
-    return browser
-
-browser = get_browser()
+browser = Browser.get(driver_path='/Users/aniketsharma/chromedriver').chrome
 
 def getDetails(uri):
     try:
