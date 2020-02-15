@@ -1,5 +1,4 @@
 
-
 # MIT License
 
 # Copyright (c) 2020 aniket sharma (@aniket965)
@@ -23,27 +22,13 @@
 # SOFTWARE.
 
 
-from selenium import webdriver as wd
-import selenium
-
-class Browser:
-    __instance = None
-    chrome = None
-    def __init__(self,driver_path):
-        if Browser.__instance != None:
-            raise Exception("This class is a singleton!")
-        else:
-            self.driver_path = driver_path
-            chrome_options = wd.ChromeOptions()
-            chrome_options.add_argument('--headless')
-            chrome_options.add_argument('log-level=3')
-            self.chrome = wd.Chrome(self.driver_path,options=chrome_options)
-            Browser.__instance = self
-        
-    @staticmethod
-    def get(driver_path):
-        if Browser.__instance == None:
-            return Browser(driver_path)
-        else:
-            return Browser.__instance
-            
+class Job:
+    def __init__(self,name='',company_website=None,job_role='',job_link=None, salary=''):
+        self.company_name = name
+        self.company_website = company_website
+        self.job_role = job_role
+        self.job_link = job_link
+        self.salary = salary
+    
+    def __str__(self):
+        return "<JOB {}-{}>".format(self.company_name, self.job_role)
